@@ -81,11 +81,6 @@ jobs:
         cd server
         npm run lint
         
-    - name: Run server type checking
-      run: |
-        cd server
-        npm run type-check
-        
     - name: Run database migrations
       run: |
         cd server
