@@ -64,4 +64,4 @@
  *         description: Invalid credentials
  *       500:
  *         description: Internal server error
- */ 
+ */

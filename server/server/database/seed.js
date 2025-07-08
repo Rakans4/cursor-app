@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const seedData = async () => {
   const client = await pool.connect();
-  
+
   try {
     // Check if test user exists
     const existingUser = await client.query('SELECT id FROM users WHERE username = $1', ['testuser']);
@@ -90,4 +90,4 @@ const runSeed = async () => {
   }
 };
 
-runSeed(); 
+runSeed();

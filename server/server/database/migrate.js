@@ -2,7 +2,7 @@ import pool from './config.js';
 
 const createTables = async () => {
   const client = await pool.connect();
-  
+
   try {
     // Create users table
     await client.query(`
@@ -86,4 +86,4 @@ const runMigration = async () => {
   }
 };
 
-runMigration(); 
+runMigration();

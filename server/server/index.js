@@ -48,8 +48,8 @@ const userController = new UserController();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     message: 'Task Manager API is running 🔥 Hot Reload ✅ Working!',
     timestamp: new Date().toISOString()
   });
@@ -81,7 +81,7 @@ client.collectDefaultMetrics({ register });
 const httpRequestCounter = new client.Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
-  labelNames: ['method', 'route', 'status'],
+  labelNames: ['method', 'route', 'status']
 });
 register.registerMetric(httpRequestCounter);
 
@@ -91,7 +91,7 @@ app.use((req, res, next) => {
     httpRequestCounter.inc({
       method: req.method,
       route: req.route ? req.route.path : req.path,
-      status: res.statusCode,
+      status: res.statusCode
     });
   });
   next();
@@ -117,4 +117,4 @@ app.listen(PORT, () => {
   console.log(`Metrics: http://localhost:${PORT}/metrics`);
 });
 
-export default app; 
+export default app;

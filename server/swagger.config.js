@@ -58,4 +58,4 @@ const options = {
   ]
 };
 
-export default swaggerJSDoc(options); 
+export default swaggerJSDoc(options);

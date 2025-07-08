@@ -23,4 +23,4 @@
  *                   type: string
  *                   format: date-time
  *                   example: "2024-02-15T10:30:00.000Z"
- */ 
+ */

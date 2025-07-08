@@ -7,6 +7,7 @@ import {
   MenuItem, 
   FormControl
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 
 interface TaskPaginationProps {
   currentPage: number;
@@ -29,8 +30,8 @@ export const TaskPagination: React.FC<TaskPaginationProps> = ({
     onPageChange(page);
   };
 
-  const handleItemsPerPageChange = (event: any) => {
-    const newItemsPerPage = event.target.value as number;
+  const handleItemsPerPageChange = (event: SelectChangeEvent<number>) => {
+    const newItemsPerPage = Number(event.target.value);
     onItemsPerPageChange(newItemsPerPage);
   };
 

@@ -11,8 +11,8 @@ export class TaskController {
       const offset = (pageNum - 1) * limitNum;
 
       // Build the WHERE clause
-      let whereConditions = ['user_id = $1'];
-      let queryParams = [userId];
+      const whereConditions = ['user_id = $1'];
+      const queryParams = [userId];
       let paramIndex = 2;
 
       if (status) {
@@ -88,19 +88,19 @@ export class TaskController {
     try {
       const { id } = req.params;
       const userId = req.user.id;
-      
+
       const result = await client.query(
         'SELECT id, user_id, title, description, status, priority, due_date, created_at, updated_at FROM tasks WHERE id = $1 AND user_id = $2',
         [id, userId]
       );
-      
+
       if (result.rows.length === 0) {
         const responseBody = { success: false, message: 'Task not found' };
         res.status(404).json(responseBody);
         console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
         return;
       }
-      
+
       const row = result.rows[0];
       const task = {
         id: row.id.toString(),
@@ -113,7 +113,7 @@ export class TaskController {
         createdAt: row.created_at,
         updatedAt: row.updated_at
       };
-      
+
       const responseBody = { success: true, message: 'Task retrieved successfully', data: task };
       res.json(responseBody);
       console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
@@ -131,12 +131,12 @@ export class TaskController {
     try {
       const { title, description, status, priority, dueDate } = req.body;
       const userId = req.user.id;
-      
+
       const result = await client.query(
         'INSERT INTO tasks (user_id, title, description, status, priority, due_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, title, description, status, priority, due_date, created_at, updated_at',
         [userId, title, description, status, priority, dueDate]
       );
-      
+
       const row = result.rows[0];
       const newTask = {
         id: row.id.toString(),
@@ -149,7 +149,7 @@ export class TaskController {
         createdAt: row.created_at,
         updatedAt: row.updated_at
       };
-      
+
       const responseBody = { success: true, message: 'Task created successfully', data: newTask };
       res.status(201).json(responseBody);
       console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
@@ -168,26 +168,26 @@ export class TaskController {
       const { id } = req.params;
       const userId = req.user.id;
       const { title, description, status, priority, dueDate } = req.body;
-      
+
       // Check if task exists and belongs to user
       const checkResult = await client.query(
         'SELECT id FROM tasks WHERE id = $1 AND user_id = $2',
         [id, userId]
       );
-      
+
       if (checkResult.rows.length === 0) {
         const responseBody = { success: false, message: 'Task not found' };
         res.status(404).json(responseBody);
         console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
         return;
       }
-      
+
       // Update the task
       const result = await client.query(
         'UPDATE tasks SET title = $1, description = $2, status = $3, priority = $4, due_date = $5 WHERE id = $6 AND user_id = $7 RETURNING id, user_id, title, description, status, priority, due_date, created_at, updated_at',
         [title, description, status, priority, dueDate, id, userId]
       );
-      
+
       const row = result.rows[0];
       const updatedTask = {
         id: row.id.toString(),
@@ -200,7 +200,7 @@ export class TaskController {
         createdAt: row.created_at,
         updatedAt: row.updated_at
       };
-      
+
       const responseBody = { success: true, message: 'Task updated successfully', data: updatedTask };
       res.json(responseBody);
       console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
@@ -218,19 +218,19 @@ export class TaskController {
     try {
       const { id } = req.params;
       const userId = req.user.id;
-      
+
       const result = await client.query(
         'DELETE FROM tasks WHERE id = $1 AND user_id = $2 RETURNING id',
         [id, userId]
       );
-      
+
       if (result.rows.length === 0) {
         const responseBody = { success: false, message: 'Task not found' };
         res.status(404).json(responseBody);
         console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
         return;
       }
-      
+
       const responseBody = { success: true, message: 'Task deleted successfully' };
       res.json(responseBody);
       console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
@@ -248,20 +248,20 @@ export class TaskController {
     try {
       const { ids, status } = req.body;
       const userId = req.user.id;
-      
+
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         const responseBody = { success: false, message: 'Task IDs array is required' };
         res.status(400).json(responseBody);
         return;
       }
-      
+
       // Update multiple tasks in one query
       const placeholders = ids.map((_, index) => `$${index + 3}`).join(',');
       const result = await client.query(
         `UPDATE tasks SET status = $1 WHERE user_id = $2 AND id = ANY(ARRAY[${placeholders}]) RETURNING id`,
         [status, userId, ...ids]
       );
-      
+
       const updatedCount = result.rows.length;
       const responseBody = { success: true, message: 'Tasks updated successfully', updatedCount };
       res.json(responseBody);
@@ -279,20 +279,20 @@ export class TaskController {
     try {
       const { ids } = req.body;
       const userId = req.user.id;
-      
+
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         const responseBody = { success: false, message: 'Task IDs array is required' };
         res.status(400).json(responseBody);
         return;
       }
-      
+
       // Delete multiple tasks in one query
       const placeholders = ids.map((_, index) => `$${index + 2}`).join(',');
       const result = await client.query(
         `DELETE FROM tasks WHERE user_id = $1 AND id = ANY(ARRAY[${placeholders}]) RETURNING id`,
         [userId, ...ids]
       );
-      
+
       const deletedCount = result.rows.length;
       const responseBody = { success: true, message: 'Tasks deleted successfully', deletedCount };
       res.json(responseBody);
@@ -309,52 +309,52 @@ export class TaskController {
     const client = await pool.connect();
     try {
       const userId = req.user.id;
-      
+
       // Get total count
       const totalResult = await client.query(
         'SELECT COUNT(*) FROM tasks WHERE user_id = $1',
         [userId]
       );
       const total = parseInt(totalResult.rows[0].count);
-      
+
       // Get counts by status
       const statusResult = await client.query(
         'SELECT status, COUNT(*) FROM tasks WHERE user_id = $1 GROUP BY status',
         [userId]
       );
-      
+
       const byStatus = {
         pending: 0,
         'in-progress': 0,
         completed: 0
       };
-      
+
       statusResult.rows.forEach(row => {
         byStatus[row.status] = parseInt(row.count);
       });
-      
+
       // Get counts by priority
       const priorityResult = await client.query(
         'SELECT priority, COUNT(*) FROM tasks WHERE user_id = $1 GROUP BY priority',
         [userId]
       );
-      
+
       const byPriority = {
         low: 0,
         medium: 0,
         high: 0
       };
-      
+
       priorityResult.rows.forEach(row => {
         byPriority[row.priority] = parseInt(row.count);
       });
-      
+
       const stats = {
         total,
         byStatus,
         byPriority
       };
-      
+
       const responseBody = { success: true, message: 'Task statistics retrieved successfully', data: stats };
       res.json(responseBody);
       console.log(`[TaskController] ${req.method} ${req.originalUrl} - user: ${req.user?.id || 'N/A'} | Query: ${JSON.stringify(req.query)} | Params: ${JSON.stringify(req.params)} | Body: ${JSON.stringify(req.body)} | Status: ${res.statusCode} | Response: ${JSON.stringify(responseBody)}`);
@@ -365,4 +365,4 @@ export class TaskController {
       client.release();
     }
   }
-} 
+}

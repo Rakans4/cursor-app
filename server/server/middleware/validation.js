@@ -11,10 +11,10 @@ const taskCreateSchema = z.object({
     .min(1, 'Description is required')
     .max(500, 'Description must be less than 500 characters'),
   status: z.enum(['pending', 'in-progress', 'completed'], {
-    required_error: 'Please select a status',
+    required_error: 'Please select a status'
   }),
   priority: z.enum(['low', 'medium', 'high'], {
-    required_error: 'Please select a priority',
+    required_error: 'Please select a priority'
   }),
   dueDate: z
     .string()
@@ -24,7 +24,7 @@ const taskCreateSchema = z.object({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return selectedDate >= today;
-    }, 'Due date must be today or in the future'),
+    }, 'Due date must be today or in the future')
 });
 
 // Task update validation schema (dueDate can be in the past)
@@ -38,14 +38,14 @@ const taskUpdateSchema = z.object({
     .min(1, 'Description is required')
     .max(500, 'Description must be less than 500 characters'),
   status: z.enum(['pending', 'in-progress', 'completed'], {
-    required_error: 'Please select a status',
+    required_error: 'Please select a status'
   }),
   priority: z.enum(['low', 'medium', 'high'], {
-    required_error: 'Please select a priority',
+    required_error: 'Please select a priority'
   }),
   dueDate: z
     .string()
-    .min(1, 'Due date is required'),
+    .min(1, 'Due date is required')
 });
 
 export const validateTaskCreate = (req, res, next) => {
@@ -57,12 +57,12 @@ export const validateTaskCreate = (req, res, next) => {
     if (error instanceof z.ZodError) {
       const errors = error.errors.map(err => ({
         field: err.path.join('.'),
-        message: err.message,
+        message: err.message
       }));
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
-        errors,
+        errors
       });
     }
     next(error);
@@ -78,14 +78,14 @@ export const validateTaskUpdate = (req, res, next) => {
     if (error instanceof z.ZodError) {
       const errors = error.errors.map(err => ({
         field: err.path.join('.'),
-        message: err.message,
+        message: err.message
       }));
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
-        errors,
+        errors
       });
     }
     next(error);
   }
-}; 
+};

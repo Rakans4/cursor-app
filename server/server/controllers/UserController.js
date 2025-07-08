@@ -8,7 +8,7 @@ export class UserController {
   async signup(req, res) {
     const { username, password } = req.body;
     const client = await pool.connect();
-    
+
     try {
       if (!username || !password) {
         const response = { success: false, message: 'Username and password are required.' };
@@ -27,7 +27,7 @@ export class UserController {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      const result = await client.query(
+      await client.query(
         'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
         [username, hashedPassword]
       );
@@ -46,7 +46,7 @@ export class UserController {
   async login(req, res) {
     const { username, password } = req.body;
     const client = await pool.connect();
-    
+
     try {
       if (!username || !password) {
         const response = { success: false, message: 'Username and password are required.' };
@@ -83,4 +83,4 @@ export class UserController {
       client.release();
     }
   }
-} 
+}
