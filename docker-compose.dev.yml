@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (same as production)
+  postgres:
+    image: postgres:15-alpine
+    container_name: task-manager-postgres-dev
+    environment:
+      POSTGRES_DB: task_manager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - backend-network-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d task_manager"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Express API Server (Development with hot reload)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.server.dev
+    container_name: task-manager-server-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_here_change_this_in_production}
+      - CORS_ORIGIN=http://localhost:5173
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=task_manager
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    networks:
+      - backend-network-dev
+      - frontend-network-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      # Mount source code for hot reload
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
+    command: ["nodemon", "--watch", "server", "--ext", "js,json", "server/index.js"]
+
+  # React Client (Development with hot reload)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: task-manager-client-dev
+    ports:
+      - "5173:5173"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - frontend-network-dev
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    volumes:
+      # Mount source code for hot reload
+      - ./client:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+
+  # Monitoring services (optional for development)
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - server
+    networks:
+      - backend-network-dev
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - backend-network-dev
+
+networks:
+  frontend-network-dev:
+    driver: bridge
+  backend-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_data_dev: 

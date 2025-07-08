@@ -1,0 +1,42 @@
+# Use Node.js 18 Alpine for smaller image size
+FROM node:18-alpine
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install dependencies for node-gyp and PostgreSQL client
+RUN apk add --no-cache python3 make g++ postgresql-client
+
+# Set npm configuration for better reliability
+RUN npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 3 && \
+    npm config set fetch-retry-mintimeout 5000 && \
+    npm config set fetch-retry-maxtimeout 60000
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies with fallback to npm install if npm ci fails
+RUN if [ -f package-lock.json ]; then \
+        npm ci --verbose || npm install --verbose; \
+    else \
+        npm install --verbose; \
+    fi && \
+    npm cache clean --force
+
+# Copy server source code
+COPY . .
+
+# Copy entrypoint script and make it executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose port
+EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Use the entrypoint script
+ENTRYPOINT ["/entrypoint.sh"] 
