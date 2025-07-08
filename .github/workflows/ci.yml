@@ -115,6 +115,6 @@ jobs:
         cd server
         docker build -f Dockerfile.server -t task-manager-server:test .
         
-    - name: Build full stack with docker-compose
+    - name: Build full stack with docker compose
       run: |
-        docker-compose -f docker-compose.yml build 
+        docker compose -f docker-compose.yml build 

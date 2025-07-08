@@ -46,8 +46,8 @@ jobs:
         key: ${{ secrets.STAGING_SSH_KEY }}
         script: |
           cd /opt/task-manager
-          docker-compose pull
-          docker-compose -f docker-compose.staging.yml up -d
+          docker compose pull
+          docker compose -f docker-compose.staging.yml up -d
           docker system prune -f
           
     - name: Health check staging
