@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: task-manager-postgres-staging
+    environment:
+      POSTGRES_DB: task_manager_staging
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    networks:
+      - backend-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d task_manager_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Express API Server
+  server:
+    image: ${DOCKER_USERNAME:-yourusername}/task-manager-server:staging-latest
+    container_name: task-manager-server-staging
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=staging
+      - PORT=3001
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key_here_change_this_in_staging}
+      - CORS_ORIGIN=http://task-manager-client-staging
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=task_manager_staging
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - RUN_CLI=false
+    networks:
+      - backend-network
+      - frontend-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Client
+  client:
+    image: ${DOCKER_USERNAME:-yourusername}/task-manager-client:staging-latest
+    container_name: task-manager-client-staging
+    ports:
+      - "8080:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - frontend-network
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://task-manager-server-staging:3001/api
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+
+volumes:
+  postgres_data_staging: 
